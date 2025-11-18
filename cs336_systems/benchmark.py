@@ -3,7 +3,7 @@ import time
 import argparse
 import contextlib
 import torch.cuda.nvtx as nvtx
-import numpy as np  # 引入 numpy 用于计算均值和标准差
+import numpy as np
 
 from cs336_basics.model import BasicsTransformerLM 
 
