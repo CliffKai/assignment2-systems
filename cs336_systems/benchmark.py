@@ -39,7 +39,7 @@ def profile_memory(args, model, x, y, optimizer, loss_fn, ctx):
         return
 
     filename = f"memory_snapshot_{args.model_size}_{args.mode}.pickle"
-    torch.cuda.memory_dump_snapshot(filename)
+    torch.cuda.memory._dump_snapshot(filename)
     print(f"Snapshot saved to {filename}")
     torch.cuda.memory._record_memory_history(enabled=None)
 
