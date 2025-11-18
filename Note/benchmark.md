@@ -1,5 +1,5 @@
 
-### 1\. 导入部分 (Imports)
+### 1\. Imports
 
 ```python
 import torch
@@ -16,8 +16,6 @@ from cs336_basics.model import BasicsTransformerLM
   * **`contextlib`**: 用于 `nullcontext`。当不需要混合精度（Mixed Precision）时，保持代码结构一致的小 trick。
   * **`cs336_basics.model`**: 这是 clone 下来直接就有的 Transformer 模型实现。
 
------
-
 ### 2\. 模型配置 (Model Configurations)
 
 ```python
@@ -30,8 +28,6 @@ MODEL_CONFIGS = {
 
   * **对应 PDF 1.1.2 Table 1**: 直接把 PDF 中的表格硬编码成了字典，可以通过命令行参数 `--model_size xl` 直接调用，方便自动化测试。
 
------
-
 ### 3\. 内存分析辅助函数 (`profile_memory`)
 
 这个函数对应 PDF **1.1.6 Profiling Memory** 的要求。
@@ -40,7 +36,7 @@ MODEL_CONFIGS = {
 def profile_memory(args, model, x, y, optimizer, loss_fn, ctx):
     print(f"Starting memory recording for model: {args.model_size}...")
     # 1. 开始记录显存历史
-    # max_entries 限制了记录的条目数，防止记录过程本身耗尽内存
+    # max_entries 限制记录的条目数，防止记录过程本身耗尽内存
     torch.cuda.memory._record_memory_history(max_entries=100000)
 
     try:
@@ -81,7 +77,7 @@ def profile_memory(args, model, x, y, optimizer, loss_fn, ctx):
 ```python
 def run_benchmark(args):
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    # ... 检查 model_size 是否存在 ...
+    # 检查 model_size 是否存在 
         
     config = MODEL_CONFIGS[args.model_size]
     
@@ -95,7 +91,7 @@ def run_benchmark(args):
         **config
     ).to(device)  # 关键：将模型移动到 GPU
     
-    # 生成随机数据
+    # 生成随机数据，模拟输入
     # 对于速度测试，数据内容不重要，只要形状（Shape）对就行
     x = torch.randint(0, 10000, (4, args.context_length)).to(device)
     y = torch.randint(0, 10000, (4, args.context_length)).to(device)
@@ -116,7 +112,7 @@ def run_benchmark(args):
     ctx = torch.autocast(device_type="cuda", dtype=dtype) if args.mixed_precision else contextlib.nullcontext()
 ```
 
-  * **Context Manager**: 小 trick，避免了在主循环里写大量的 `if args.mixed_precision:` 判断。
+  * **Context Manager**: 小 trick，避免了在主循环里写 `if args.mixed_precision:` 判断。
 
 #### 4.3 预热阶段 (Warm-up) (PDF 1.1.3 a/c)
 
@@ -206,20 +202,27 @@ def run_benchmark(args):
     print("-" * 60)
 ```
 
-### 5\. 命令行入口 (`if __name__ == "__main__":`)
+### 5\. 入口
 
 ```python
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    # 定义所有可调参数，方便批量测试（Sweep）
     parser.add_argument("--model_size", type=str, default="small", choices=MODEL_CONFIGS.keys())
     parser.add_argument("--context_length", type=int, default=128)
     parser.add_argument("--steps", type=int, default=10)
     parser.add_argument("--warmup_steps", type=int, default=5)
     parser.add_argument("--mode", type=str, default="fwd", choices=["fwd", "bwd"])
-    parser.add_argument("--mixed_precision", action="store_true") # 开关型参数
+    parser.add_argument("--mixed_precision", action="store_true")
     parser.add_argument("--profile_memory", action="store_true")
     
     args = parser.parse_args()
     run_benchmark(args)
 ```
+
+- model_size：模型大小
+- context_length：控制上下文长度大小
+- steps：测量步数（不算 warmup 的部分）
+- warmup_steps：预热，初始化开销，进入稳定状态，保证测量的是“稳定状态”的速度
+- mode：是否计算反向传播的速度
+- mixed_precision：是否启用混合精度（FP32 与 BF16 的对比）
+- profile_memory：是否测显存
