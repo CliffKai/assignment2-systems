@@ -3,7 +3,10 @@ from __future__ import annotations
 from typing import Type
 
 import torch
-
+try:
+    from cs336_systems.flash_attention import FlashAttentionFunction
+except ImportError:
+    FlashAttentionFunction = None
 
 
 def get_flashattention_autograd_function_pytorch() -> Type:
@@ -16,7 +19,10 @@ def get_flashattention_autograd_function_pytorch() -> Type:
         A class object (not an instance of the class)
     """
     # For example: return MyFlashAttnAutogradFunctionClass
-    raise NotImplementedError
+    if FlashAttentionFunction is None:
+        raise NotImplementedError("FlashAttentionFunction not found in cs336_systems")
+    
+    return FlashAttentionFunction
 
 
 def get_flashattention_autograd_function_triton() -> Type:
