@@ -3,11 +3,11 @@ bash run_all.sh
 
 # 生成 Nsight Systems 报告
 CUDA_VISIBLE_DEVICES=3 nsys profile \
-    -o profile_2.7B_fwd \
+    -o profile_medium_fwd \
     --force-overwrite true \
     --python-backtrace=cuda \
     uv run python benchmark.py \
-    --model_size 2.7B \
+    --model_size medium \
     --mode fwd \
     --mixed_precision \
     --context_length 128 \
